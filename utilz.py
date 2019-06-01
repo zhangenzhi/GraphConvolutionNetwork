@@ -1,3 +1,9 @@
+import pickle
+import numpy as np
+
+def left_shift(l):
+    return l[1:]+l[:1]
+
 def get_macro_data():
 
     str_dict = {}
