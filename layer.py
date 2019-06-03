@@ -32,7 +32,7 @@ class GraphConvLayer(layers.Layer):
         base_config['output_dim'] = self.output_dim
         return base_config
 
-def test():
+def NN():
     model = tf.keras.Sequential()
     model.add(layers.Flatten())
     model.add(layers.Dense(128,activation="relu"))
