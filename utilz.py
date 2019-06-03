@@ -5,7 +5,7 @@ def left_shift(l):
     return l[1:]+l[:1]
 
 def get_macro_data():
-
+    """ need validation data"""
     str_dict = {}
     with open("Data/str_acc","rb") as f:
         str_dict = pickle.load(f) 
@@ -47,6 +47,7 @@ def get_macro_data():
 
     """degree matrix + direct graph"""
     str_dict["AP"] = A+P
+
 
     return str_dict
     # print(np.shape(str_dict['structure']))

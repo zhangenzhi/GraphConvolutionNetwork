@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
-from ten
+from utilz import get_macro_data
 import numpy as np
 
 
@@ -34,23 +34,28 @@ class GraphConvLayer(layers.Layer):
 
 def test():
     model = tf.keras.Sequential()
+    model.add(layers.Flatten())
+    model.add(layers.Dense(128,activation="relu"))
     model.add(layers.Dense(64,activation="relu"))
-    model.add(layers.Dense(64,activation="relu"))
-    model.add(layers.Dense(10,activation="softmax"))
+    model.add(layers.Dense(32,activation="relu"))
+    model.add(layers.Dense(16,activation="relu"))
+    model.add(layers.Dense(1,activation="sigmoid"))
 
     model.compile(optimizer=tf.train.AdamOptimizer(0.001),
-                loss='categorical_crossentropy',
-                metrics=['accuracy'])
+                loss='mean_squared_error')
 
-    data = np.random.random((1000, 32))
-    labels = np.random.random((1000, 10))
+    data_dict = get_macro_data()
+    
+    data = data_dict["A"] + data_dict["P"]
+    data = np.asarray(data)
 
+    labels = data_dict["accuracy"]
+    labels = np.asarray(labels)
 
-    val_data = np.random.random((100, 32))
-    val_labels = np.random.random((100, 10))
+    # val_data = np.random.random((100, 32))
+    # val_labels = np.random.random((100, 10))
 
-    model.fit(data, labels, epochs=1000, batch_size=32,
-            validation_data=(val_data, val_labels))
+    model.fit(data, labels, epochs=1000, batch_size=32)
 
 
 
