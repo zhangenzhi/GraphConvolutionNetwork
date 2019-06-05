@@ -35,20 +35,33 @@ class MyLayer(layers.Layer):
     def from_config(cls, config):
         return cls(**config)
 
-model = tf.keras.Sequential([
-    MyLayer(10),
-    layers.Activation('softmax')])
+def My():
+    model = tf.keras.Sequential([
+        MyLayer(10),
+        layers.Activation('softmax')])
 
-data = np.random.random((1000, 56))
-labels = np.random.random((1000, 10))
+    data = np.random.random((1000, 56))
+    labels = np.random.random((1000, 10))
 
-# The compile step specifies the training configuration
-model.compile(optimizer=tf.train.RMSPropOptimizer(0.001),
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+    # The compile step specifies the training configuration
+    model.compile(optimizer=tf.train.RMSPropOptimizer(0.001),
+                loss='categorical_crossentropy',
+                metrics=['accuracy'])
 
-# Trains for 5 epochs.
-model.fit(data, labels, batch_size=64, epochs=5)
+    # Trains for 5 epochs.
+    model.fit(data, labels, batch_size=64, epochs=5)
 
+
+def TF_Mul():
+    a = tf.constant(np.arange(1, 12, dtype=np.float32),dtype=tf.float32,shape=[3,2,2])
+    b = tf.constant(np.arange(1, 4, dtype=np.float32),dtype=tf.float32,shape=[2,2])
+
+    c = tf.matmul(a[0,:,:],b)
+
+    sess = tf.Session()
+    c = sess.run(c)
+
+    print(np.shape(c))
+    print(a.get_shape())
 if __name__ == "__main__":
-    np.eye()
+    TF_Mul()

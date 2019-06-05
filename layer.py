@@ -6,12 +6,13 @@ import numpy as np
 
 class GraphConvLayer(layers.Layer):
 
-    def __init__(self,output_dim,**kwargs):
+    def __init__(self,input_dim,output_dim,**kwargs):
         self.output_dim = output_dim
+        self.input_dim = input_dim
         super(GraphConvLayer, self).__init__(**kwargs)
     
     def build(self,input_shape):
-        shape = tf.TensorShape((input_shape[1], self.output_dim))
+        shape = tf.TensorShape((input_shape[-1], self.output_dim))
         # Create a trainable weight variable for this layer.
         self.kernel = self.add_weight(name='kernel',
                                     shape=shape,
@@ -23,8 +24,11 @@ class GraphConvLayer(layers.Layer):
     
     def call(self,inputs):
         #support * kernel ,support = D^(-0.5) * A' * D^(-0.5) * feature
-        
-        result = tf.matmul(inputs, self.kernel)
+        shape = inputs.get_shape()
+        inputs = tf.reshape(inputs,[-1,self.input_dim])
+        result = tf.matmul(inputs,self.kernel)
+        result = tf.reshape(result,[-1,shape[1],self.output_dim])
+
         return tf.nn.relu(result)
     
     def compute_output_shape(self,input_shape):
@@ -90,18 +94,18 @@ def GCN():
     for i in range(len(A_bar)):
         support = np.matmul(np.matmul(D_bar[i],A_bar[i]),D_bar[i])
         support = np.matmul(support,features[i])
-        supports.append(support)
+        supports.append(np.reshape(support,[12,1]))
     supports = np.asarray(supports)
 
     labels = data_dict["accuracy"]
-    labels = np.asarray(labels)
+    labels = np.reshape(labels,(len(labels),1))
 
     # need to make feature as data
     # need to compute D^(-0.5) and A+I
     model = tf.keras.Sequential()
 
-    model.add(GraphConvLayer(8))
-    model.add(GraphConvLayer(16))
+    model.add(GraphConvLayer(1,8))
+    model.add(GraphConvLayer(8,16))
     model.add(layers.Flatten())
     model.add(layers.Dense(64,activation="relu"))
     model.add(layers.Dense(32,activation="relu"))
@@ -109,14 +113,14 @@ def GCN():
     model.add(layers.Dense(1,activation="sigmoid"))
 
 
-    model.compile(optimizer=tf.train.AdamOptimizer(0.001),
+    model.compile(optimizer=tf.train.AdamOptimizer(0.01),
                 loss='mse',metrics=['mae'])
 
 
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    model.fit(supports, labels, epochs=1000, batch_size=32)
+    model.fit(supports, labels, epochs=1000, batch_size=64)
 
 
 
