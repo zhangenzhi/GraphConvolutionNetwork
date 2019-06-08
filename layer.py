@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
+import matplotlib.pyplot as plt
 from utilz import get_macro_data
 import numpy as np
 
@@ -44,6 +45,7 @@ class GraphConvLayer(layers.Layer):
     @classmethod
     def from_config(cls, config):
         return cls(**config)
+
 def NN():
 
     model = tf.keras.Sequential()
@@ -67,9 +69,17 @@ def NN():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    model.fit(data[:5000], labels[:5000], epochs=1000, batch_size=32,validation_split=0.2)
+    history = model.fit(data[:5000], labels[:5000], epochs=100, batch_size=32,
+    validation_split=0.2)
 
-def GCN():
+    plt.plot(history.history['mean_absolute_error'])
+    plt.plot(history.history['val_mean_absolute_error'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+def GCN_cheby():
 
     data_dict = get_macro_data()
     
@@ -117,7 +127,11 @@ def GCN():
 
     model.add(GraphConvLayer(1,8))
     model.add(GraphConvLayer(8,16))
+    model.add(GraphConvLayer(16,32))
+    model.add(GraphConvLayer(32,64))
     model.add(layers.Flatten())
+    model.add(layers.Dense(768,activation="relu"))
+    model.add(layers.Dense(128,activation="relu"))
     model.add(layers.Dense(64,activation="relu"))
     model.add(layers.Dense(32,activation="relu"))
     model.add(layers.Dense(16,activation="relu"))
@@ -131,11 +145,20 @@ def GCN():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    model.fit(shuffled_supports[:5000], shuffled_labels[:5000], 
-            epochs=1000, batch_size=64,
+    history = model.fit(shuffled_supports[:5000], shuffled_labels[:5000], 
+            epochs=100, batch_size=64,
             validation_split=0.2)
+
+    plt.plot(history.history['mean_absolute_error'])
+    plt.plot(history.history['val_mean_absolute_error'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
 
 
 
 if __name__ == "__main__":
+    #GCN_cheby()
     NN()
