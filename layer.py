@@ -48,7 +48,7 @@ def NN():
 
     model = tf.keras.Sequential()
     model.add(layers.Flatten())
-    model.add(layers.Dense(64,activation="relu"))
+
     model.add(layers.Dense(32,activation="relu"))
     model.add(layers.Dense(16,activation="relu"))
     model.add(layers.Dense(1,activation="sigmoid"))
@@ -67,7 +67,7 @@ def NN():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    model.fit(data, labels, epochs=1000, batch_size=32)
+    model.fit(data[:5000], labels[:5000], epochs=1000, batch_size=32,validation_split=0.2)
 
 def GCN():
 
@@ -100,6 +100,17 @@ def GCN():
     labels = data_dict["accuracy"]
     labels = np.reshape(labels,(len(labels),1))
 
+    indice = [i for i in range(len(supports))]
+    np.random.shuffle(indice)
+
+    shuffled_supports = []
+    shuffled_labels = []
+    for i in indice:
+        shuffled_supports.append(supports[i])
+        shuffled_labels.append(labels[i])
+
+    shuffled_supports = np.asarray(shuffled_supports)
+    shuffled_labels = np.asarray(shuffled_labels)
     # need to make feature as data
     # need to compute D^(-0.5) and A+I
     model = tf.keras.Sequential()
@@ -120,9 +131,11 @@ def GCN():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    model.fit(supports, labels, epochs=1000, batch_size=64)
+    model.fit(shuffled_supports[:5000], shuffled_labels[:5000], 
+            epochs=1000, batch_size=64,
+            validation_split=0.2)
 
 
 
 if __name__ == "__main__":
-    GCN()
+    NN()
