@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-
+import copy
 def left_shift(l):
     return l[1:]+l[:1]
 
@@ -26,32 +26,50 @@ def get_macro_data():
             P[i][j][j] = str_dict['structure'][i][j][-1]
             for k in range(j):
                 A[i][j][k]=str_dict['structure'][i][j][k]
+            if j != 11:
+                A[i][j+1][j]= 1
+    for i in range(nums):
+        for j in range(12):
+            if j != 11:
+                A[i][j+1][j]= 1
+
     str_dict["P"] = P
-    str_dict["A"] = A
+    Adj = A+np.transpose(A,axes=[0,2,1])
+    str_dict["Adj"] = Adj
 
-    """diagnol property + adjency matrix"""
-    str_dict["APAt"] = A+P+np.transpose(A,axes=[0,2,1])
-
-
-    """ degreee matrix + adjency"""
-    D = np.sum(A,axis=1)
+    """ degreee matrix"""
+    D = np.sum(Adj,axis=1)
     AD = np.zeros((nums,12,12))
     for i in range(nums):
         for j in range(12):
             AD[i][j][j] = D[i][j]
     str_dict["D"] = AD
-    str_dict["AD"]= AD+A
-    str_dict["ADAt"] = AD+np.transpose(A,axes=[0,2,1])+A
+    
     # print(str_dict["D"][0])
     # print(str_dict["ADAt"][0])
 
-    """degree matrix + direct graph"""
-    str_dict["AP"] = A+P
 
+    """ normalized graph Laplacian"""
+    
+    datashape = np.shape(Adj)
+    D = copy.deepcopy(AD)
+    for i in range(len(D)):
+        for j in range(len(D[0])):
+            D[i][j][j] = 1/np.sqrt(D[i][j][j])
 
-    return str_dict
+    L = []
+    for i in range(len(Adj)):
+        laplacian = np.eye(datashape[1],datashape[2]) - np.matmul(np.matmul(D[i],Adj[i]),D[i])
+        eigenvalue = np.linalg.eigvals(laplacian)
+        cheby_L = 2/max(eigenvalue) * laplacian - np.eye(datashape[1],datashape[2])
+        L.append(cheby_L)
     # print(np.shape(str_dict['structure']))
     # print(np.shape(str_dict['accuracy']))
+    Laplacian = {"L":L}
 
+    with open("Data/Laplacian","wb") as f:
+        pickle.dump(Laplacian,f) 
+
+    return str_dict
 if __name__ == "__main__":
     get_macro_data()

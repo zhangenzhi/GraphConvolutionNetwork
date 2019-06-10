@@ -46,6 +46,45 @@ class GraphConvLayer(layers.Layer):
     def from_config(cls, config):
         return cls(**config)
 
+class GraphConvLayer2(layers.Layer):
+    def __init__(self,input_dim,output_dim,**kwargs):
+        self.output_dim = output_dim
+        self.input_dim = input_dim
+        super(GraphConvLayer, self).__init__(**kwargs)
+    
+    def build(self,input_shape):
+        shape = tf.TensorShape((input_shape[-1], self.output_dim))
+        # Create a trainable weight variable for this layer.
+        self.kernel = self.add_weight(name='kernel',
+                                    shape=shape,
+                                    initializer='uniform',
+                                    trainable=True)
+
+        # Be sure to call this at the end
+        super(GraphConvLayer, self).build(input_shape)
+    
+    def call(self,inputs):
+        #support * kernel ,support = D^(-0.5) * A' * D^(-0.5) * feature
+        shape = inputs.get_shape()
+        inputs = tf.reshape(inputs,[-1,self.input_dim])
+        result = tf.matmul(inputs,self.kernel)
+        result = tf.reshape(result,[-1,shape[1],self.output_dim])
+
+        return tf.nn.relu(result)
+    
+    def compute_output_shape(self,input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.output_dim
+        return tf.TensorShape(shape)
+    
+    def get_config(self):
+        base_config = super(GraphConvLayer, self).get_config()
+        base_config['output_dim'] = self.output_dim
+        return base_config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
 def NN():
 
     model = tf.keras.Sequential()
@@ -53,14 +92,14 @@ def NN():
 
     model.add(layers.Dense(32,activation="relu"))
     model.add(layers.Dense(16,activation="relu"))
-    model.add(layers.Dense(1,activation="sigmoid"))
+    model.add(layers.Dense(1))
 
     model.compile(optimizer=tf.train.AdamOptimizer(0.001),
                 loss='mean_squared_error',metrics=['mae'])
 
     data_dict = get_macro_data()
     
-    data = data_dict["A"] + data_dict["P"]
+    data = data_dict["Adj"] + data_dict["P"]
     data = np.asarray(data)
 
     labels = data_dict["accuracy"]
@@ -69,7 +108,7 @@ def NN():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    history = model.fit(data[:5000], labels[:5000], epochs=100, batch_size=32,
+    history = model.fit(data[:3000], labels[:3000], epochs=100, batch_size=32,
     validation_split=0.2)
 
     plt.plot(history.history['mean_absolute_error'])
@@ -79,11 +118,11 @@ def NN():
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
-def GCN_cheby():
+def GCN():
 
     data_dict = get_macro_data()
     
-    A = data_dict["A"] + np.transpose(data_dict["A"],axes=[0,2,1])
+    A = data_dict["Adj"]
     D = data_dict["D"]
     feature = data_dict["P"]
     features = np.sum(feature,axis=2)
@@ -126,16 +165,10 @@ def GCN_cheby():
     model = tf.keras.Sequential()
 
     model.add(GraphConvLayer(1,8))
-    model.add(GraphConvLayer(8,16))
-    model.add(GraphConvLayer(16,32))
-    model.add(GraphConvLayer(32,64))
     model.add(layers.Flatten())
-    model.add(layers.Dense(768,activation="relu"))
-    model.add(layers.Dense(128,activation="relu"))
-    model.add(layers.Dense(64,activation="relu"))
     model.add(layers.Dense(32,activation="relu"))
     model.add(layers.Dense(16,activation="relu"))
-    model.add(layers.Dense(1,activation="sigmoid"))
+    model.add(layers.Dense(1))
 
 
     model.compile(optimizer=tf.train.AdamOptimizer(0.01),
@@ -145,8 +178,8 @@ def GCN_cheby():
     # val_data = np.random.random((100, 32))
     # val_labels = np.random.random((100, 10))
 
-    history = model.fit(shuffled_supports[:5000], shuffled_labels[:5000], 
-            epochs=100, batch_size=64,
+    history = model.fit(shuffled_supports[:3000], shuffled_labels[:3000], 
+            epochs=100, batch_size=32,
             validation_split=0.2)
 
     plt.plot(history.history['mean_absolute_error'])
@@ -160,5 +193,5 @@ def GCN_cheby():
 
 
 if __name__ == "__main__":
-    #GCN_cheby()
+    #GCN()
     NN()
