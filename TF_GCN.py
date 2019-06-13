@@ -9,7 +9,7 @@ supports = tf.placeholder(dtype=tf.float32,shape=[None,12,12],name="supports")
 labels = tf.placeholder(dtype=tf.float32,shape=[None,1],name="labels")
 
 supports_1 = tf.matmul(supports,features)
-weight_1 = tf.get_variable("weight_1",[1,16])
+weight_1 = tf.get_variable("weight_1",[12,12])
 result_1 = tf.nn.relu(tf.matmul(tf.reshape(supports_1,[-1,1]),weight_1))
 
 support_2 = tf.matmul(supports,tf.reshape(result_1,[-1,12,16]))
